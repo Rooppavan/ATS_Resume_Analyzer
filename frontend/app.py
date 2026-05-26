@@ -38,7 +38,7 @@ if page == "ATS Analyzer":
         }
 
         response = requests.post(
-            "http://127.0.0.1:8000/Upload-Resume",
+            "https://ats-resume-analyzer-88kv.onrender.com/Upload-Resume",
             files=files
         )
 
@@ -89,7 +89,7 @@ if page == "Resume History":
     st.header("Resume Analysis History")
 
     history_response = requests.get(
-        "http://127.0.0.1:8000/resume-history"
+        "https://ats-resume-analyzer-88kv.onrender.com/resume-history"
     )
 
     history_data = history_response.json()
