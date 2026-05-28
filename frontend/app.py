@@ -98,7 +98,7 @@ if page == "ATS Analyzer":
             ):
 
                 response = requests.post(
-                    "http://127.0.0.1:8000/Upload-Resume",
+                    "https://ats-resume-analyzer-88kv.onrender.com/Upload-Resume",
                     files=files,
                     data={
                         "job_description":
