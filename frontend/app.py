@@ -77,7 +77,7 @@ if page == "ATS Analyzer":
     )
 
     job_description = st.text_area(
-        "Paste Job Description (Optional)",
+        "Provide Job Description (Optional)",
         height=200
     )
 
@@ -282,7 +282,7 @@ if page == "Resume History":
     st.header("📊 Resume Analysis History")
 
     history_response = requests.get(
-        "http://127.0.0.1:8000/resume-history"
+        "https://ats-resume-analyzer-88kv.onrender.com/resume-history"
     )
 
     history_data = history_response.json()
