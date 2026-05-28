@@ -5,10 +5,15 @@ import plotly.express as px
 
 st.set_page_config(
     page_title="AI Resume ATS Analyzer",
-    layout="centered"
+    page_icon="📄",
+    layout="wide"
 )
 
-st.sidebar.title("Navigation")
+# -----------------------------------
+# SIDEBAR
+# -----------------------------------
+
+st.sidebar.title("📌 Navigation")
 
 page = st.sidebar.radio(
     "Go To",
@@ -18,11 +23,51 @@ page = st.sidebar.radio(
     ]
 )
 
-st.title("AI Resume ATS Analyzer")
+st.sidebar.markdown("---")
 
-st.write(
-    "Upload your resume and get ATS analysis instantly."
+st.sidebar.info(
+    "AI Powered ATS Resume Analyzer"
 )
+
+st.sidebar.markdown(
+    """
+    ## 🚀 Features
+
+    ✅ ATS Analysis  
+    ✅ JD Match Score  
+    ✅ AI Suggestions  
+    ✅ Resume Intelligence  
+    ✅ Resume History Dashboard  
+    """
+)
+# -----------------------------------
+# MAIN TITLE
+# -----------------------------------
+
+st.markdown(
+    """
+    <h1 style='text-align:center;
+    font-size:55px;
+    color:#4F8BF9;'>
+
+    🚀 AI Resume Analyzer
+
+    </h1>
+
+    <p style='text-align:center;
+    font-size:22px;
+    color:gray;'>
+
+    Analyze your resume with AI-powered ATS intelligence
+
+    </p>
+    """,
+    unsafe_allow_html=True
+)
+
+# ===================================
+# ATS ANALYZER PAGE
+# ===================================
 
 if page == "ATS Analyzer":
 
@@ -31,76 +76,258 @@ if page == "ATS Analyzer":
         type=["pdf"]
     )
 
+    job_description = st.text_area(
+        "Paste Job Description (Optional)",
+        height=200
+    )
+
     if uploaded_file is not None:
 
-        files = {
-            "file": uploaded_file
-        }
-
-        response = requests.post(
-            "https://ats-resume-analyzer-88kv.onrender.com/Upload-Resume",
-            files=files
+        st.success(
+            "Resume uploaded successfully"
         )
 
-        result = response.json()
+        if st.button("Submit", use_container_width=True):
 
-        if "analysis" in result:
+            files = {
+                "file": uploaded_file
+            }
 
-            analysis = result["analysis"]
+            with st.spinner(
+                "🤖 AI is analyzing your resume..."
+            ):
 
-            st.success(
-                result["message"]
-            )
+                response = requests.post(
+                    "http://127.0.0.1:8000/Upload-Resume",
+                    files=files,
+                    data={
+                        "job_description":
+                            job_description
+                    }
+                )
 
-            st.subheader("ATS Score")
+            result = response.json()
 
-            st.progress(
-                analysis["ats_score"] / 100
-            )
+            if "analysis" in result:
 
-            st.metric(
-                label="ATS Score",
-                value=f'{analysis["ats_score"]}%'
-            )
+                analysis = result["analysis"]
 
-            col1, col2 = st.columns(2)
+                # -----------------------------------
+                # TABS
+                # -----------------------------------
 
-            with col1:
+                tab1, tab2, tab3 = st.tabs(
+                    [
+                        "ATS Analysis",
+                        "JD Match",
+                        "Suggestions"
+                    ]
+                )
 
-                st.subheader("Matched Skills")
+                # ===================================
+                # TAB 1 — ATS ANALYSIS
+                # ===================================
 
-                for skill in analysis["matched_skills"]:
-                    st.success(skill)
+                with tab1:
 
-            with col2:
+                    col1, col2 = st.columns(2)
 
-                st.subheader("Missing Skills")
+                    with col1:
 
-                for skill in analysis["missing_skills"]:
-                    st.error(skill)
+                        st.markdown(
+                            f"""
+                            <div style="
+                                background-color:#111827;
+                                padding:25px;
+                                border-radius:18px;
+                                border:1px solid #374151;
+                                text-align:center;
+                            ">
 
-        else:
+                            <h3 style="color:white;">
+                                🎯 ATS Score
+                            </h3>
 
-            st.error(result)
+                            <h1 style="color:#22c55e;
+                            font-size:50px;">
 
+                                {analysis['ats_score']}%
+
+                            </h1>
+
+                            </div>
+                            """,
+                            unsafe_allow_html=True
+                        )
+
+                    with col2:
+
+                        st.metric(
+                            "Resume Sections",
+                            len(
+                                analysis[
+                                    "detected_sections"
+                                ]
+                            )
+                        )
+
+                    st.progress(
+                        analysis["ats_score"] / 100
+                    )
+                    
+                    st.divider()
+
+                    st.markdown(
+                        "## 📑 Resume Sections Found"
+                    )
+                    
+                    st.divider()
+                    
+                    st.markdown("## 🤖 AI Resume Verdict")
+                    
+                    st.info(analysis["ai_verdict"])
+
+                    cols = st.columns(4)
+
+                    for i, section in enumerate(
+                        analysis["detected_sections"]
+                    ):
+
+                        cols[i % 4].success(
+                            section.title()
+                        )
+
+                    st.markdown(
+                        "## 💪 Resume Strengths"
+                    )
+
+                    for strength in analysis[
+                        "strengths"
+                    ]:
+
+                        st.success(strength)
+
+                # ===================================
+                # TAB 2 — JD MATCH
+                # ===================================
+
+                with tab2:
+
+                    if analysis[
+                        "job_match_score"
+                    ] > 0:
+
+                        st.metric(
+                            "JD Match Score",
+                            f"{analysis['job_match_score']}%"
+                        )
+
+                        st.markdown(
+                            "## 🔍 Matched Keywords"
+                        )
+
+                        matched_cols = st.columns(4)
+
+                        for i, keyword in enumerate(
+                            analysis[
+                                "matched_keywords"
+                            ]
+                        ):
+
+                            matched_cols[
+                                i % 4
+                            ].success(keyword)
+
+                    else:
+
+                        st.info(
+                            "No Job Description provided."
+                        )
+
+                # ===================================
+                # TAB 3 — SUGGESTIONS
+                # ===================================
+
+                with tab3:
+
+                    st.markdown(
+                        "## 💡 Suggestions To Improve"
+                    )
+
+                    for suggestion in analysis[
+                        "suggestions"
+                    ]:
+
+                        st.warning(suggestion)
+                    st.markdown("## 🤖 AI Resume Improvements")
+                    
+                    if analysis["ai_rewrite_suggestions"]:
+                        for item in analysis["ai_rewrite_suggestions"]:
+                            st.info(item)
+                    else:
+                        st.success("Your resume already uses strong action-oriented language.")
+
+            else:
+
+                st.error(
+                    "Something went wrong"
+                )
+
+# ===================================
+# RESUME HISTORY PAGE
+# ===================================
 
 if page == "Resume History":
 
-    st.header("Resume Analysis History")
+    st.header("📊 Resume Analysis History")
 
     history_response = requests.get(
-        "https://ats-resume-analyzer-88kv.onrender.com/resume-history"
+        "http://127.0.0.1:8000/resume-history"
     )
 
     history_data = history_response.json()
-    
-    st.write(history_data)
 
     if history_data:
 
         df = pd.DataFrame(history_data)
 
-        st.dataframe(df)
+        # -----------------------------------
+        # METRICS
+        # -----------------------------------
+
+        col1, col2 = st.columns(2)
+
+        with col1:
+
+            st.metric(
+                "Total Resumes",
+                len(df)
+            )
+
+        with col2:
+
+            st.metric(
+                "Highest ATS Score",
+                df["ats_score"].max()
+            )
+
+        # -----------------------------------
+        # TABLE
+        # -----------------------------------
+
+        st.dataframe(
+            df[
+                [
+                    "filename",
+                    "ats_score"
+                ]
+            ],
+            use_container_width=True
+        )
+
+        # -----------------------------------
+        # CHART
+        # -----------------------------------
 
         fig = px.bar(
             df,
@@ -109,8 +336,26 @@ if page == "Resume History":
             title="ATS Score History"
         )
 
-        st.plotly_chart(fig)
+        st.plotly_chart(
+            fig,
+            use_container_width=True
+        )
 
     else:
 
-        st.warning("No resume history found.")
+        st.warning(
+            "No resume history found."
+        )
+
+st.markdown(
+    """
+    <hr>
+
+    <center>
+
+    Built with ❤️ using FastAPI + Streamlit
+
+    </center>
+    """,
+    unsafe_allow_html=True
+)

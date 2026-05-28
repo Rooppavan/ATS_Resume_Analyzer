@@ -9,6 +9,7 @@ from app.resume_parser import extract_resume_text
 from app.ats_analyzer import analyze_resume
 from app.models import (User, ResumeAnalysis)
 from app.auth import verify_token
+from fastapi import Form
 
 from app.database import get_db
 from app.models import User
@@ -33,8 +34,6 @@ def get_resume_history(
             "id": resume.id,
             "filename": resume.filename,
             "ats_score": resume.ats_score,
-            "matched_skills": resume.matched_skills,
-            "missing_skills": resume.missing_skills
         })
 
     return history
@@ -69,7 +68,7 @@ def login_user(user: UserSchema, db: Session = Depends(get_db)):
     }
     
 @router.post("/Upload-Resume")
-def upload_resume(file: UploadFile = File(...), db: Session = Depends(get_db)):
+def upload_resume(file: UploadFile = File(...), job_description: str = Form(""),db: Session = Depends(get_db)):
     file_path = f"app/uploads/{file.filename}"
     
     with open(file_path, "wb") as buffer:
@@ -77,11 +76,9 @@ def upload_resume(file: UploadFile = File(...), db: Session = Depends(get_db)):
     
     resume_text = extract_resume_text(file_path)
     
-    analysis_result = analyze_resume(resume_text)
+    analysis_result = analyze_resume(resume_text, job_description)
     
-    resume_record = ResumeAnalysis( filename = file.filename, ats_score = analysis_result["ats_score"], 
-                                   matched_skills = ", ".join(analysis_result["matched_skills"]),
-                                   missing_skills = ", ".join(analysis_result["missing_skills"]), user_id = 1)
+    resume_record = ResumeAnalysis( filename = file.filename, ats_score = analysis_result["ats_score"], user_id = 1)
     
     db.add(resume_record)
     

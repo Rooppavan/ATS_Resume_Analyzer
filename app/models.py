@@ -21,10 +21,6 @@ class ResumeAnalysis(Base):
     filename = Column(String)
     
     ats_score = Column(Integer)
-    
-    matched_skills = Column(String)
-    
-    missing_skills = Column(String)
-    
+     
     user_id = Column(Integer, ForeignKey("users.id"))
     
